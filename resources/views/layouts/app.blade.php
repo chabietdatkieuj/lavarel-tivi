@@ -189,6 +189,14 @@
                             @endif
                         </a>
                     </li>
+
+                    {{-- NEW: Tin tức & Voucher (khách xem) --}}
+                    @if(Route::has('vouchers.news'))
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('vouchers.news') ? 'active' : '' }}"
+                           href="{{ route('vouchers.news') }}">📰Voucher</a>
+                    </li>
+                    @endif
                 @endunless
             </ul>
 
@@ -251,6 +259,15 @@
                    href="{{ route('admin.reports.index') }}">📑 Báo cáo (bảng)</a>
                 <a class="nav-link {{ request()->routeIs('admin.reports.charts') ? 'active' : '' }}"
                    href="{{ route('admin.reports.charts') }}">📈 Biểu đồ</a>
+                <a class="nav-link {{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}"
+                   href="{{ route('admin.reviews.index') }}">📝 Quản lý đánh giá</a>
+
+                {{-- NEW: Khuyến mãi / Voucher (admin) --}}
+                @if(Route::has('admin.vouchers.index'))
+                <div class="mt-3 mb-1 text-uppercase small text-muted">Khuyến mãi</div>
+                <a class="nav-link {{ request()->routeIs('admin.vouchers.*') ? 'active' : '' }}"
+                   href="{{ route('admin.vouchers.index') }}">🎟️ Quản lý Voucher</a>
+                @endif
             </nav>
         </aside>
 

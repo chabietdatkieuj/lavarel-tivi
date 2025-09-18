@@ -66,8 +66,11 @@ class AdminController extends Controller
             });
         }
 
-        $orders = $q->paginate(12)->withQueryString();
-        return view('admin.orders.index', compact('orders', 'status', 'search'));
+
+         // 🔽 chỉ 10 đơn/trang + giữ query khi chuyển trang
+    $orders = $q->paginate(10)->withQueryString();
+
+    return view('admin.orders.index', compact('orders', 'status', 'search'));
     }
 
     // Chi tiết đơn

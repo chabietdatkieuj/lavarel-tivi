@@ -10,17 +10,14 @@ use Carbon\Carbon;
 
 class ReportController extends Controller
 {
-    /**
-     * BÁO CÁO DẠNG BẢNG (tổng quan)
-     */
+    /** BÁO CÁO DẠNG BẢNG */
     public function index(Request $request)
     {
-        // Chỉ tính doanh thu với đơn đã thanh toán / đã giao
         $paidStatuses = ['delivered', 'paid'];
 
-        // 1) Doanh thu theo DANH MỤC (SUM(order_items.price * order_items.quantity))
+        // Doanh thu theo danh mục (từ order_items)
         $categoryRevenue = DB::table('order_items as oi')
-            ->join('orders as o', 'oi.order_id', '=', 'o.id')
+            ->join('orders as o',   'oi.order_id',   '=', 'o.id')
             ->join('products as p', 'oi.product_id', '=', 'p.id')
             ->leftJoin('categories as c', 'p.category_id', '=', 'c.id')
             ->whereIn('o.status', $paidStatuses)
@@ -34,15 +31,12 @@ class ReportController extends Controller
             ->orderByDesc('total_revenue')
             ->get();
 
-        // 2) Tổng số đơn hàng
-        $totalOrders = Order::count();
-
-        // 3) Tổng số khách hàng
+        $totalOrders    = Order::count();
         $totalCustomers = DB::table('users')
-            ->whereIn('role', ['customer', 'user', 'CUSTOMER', 'USER'])
+            ->whereIn('role', ['customer','user','CUSTOMER','USER'])
             ->count();
 
-        // 4) Doanh thu theo NGÀY (MySQL)
+        // Theo ngày
         $revenueByDate = Order::query()
             ->whereIn('status', $paidStatuses)
             ->selectRaw('DATE(created_at) AS d, COALESCE(SUM(total_amount),0) AS total_revenue, COUNT(*) AS order_count')
@@ -50,7 +44,7 @@ class ReportController extends Controller
             ->orderBy('d')
             ->get();
 
-        // 5) Doanh thu theo THÁNG (MySQL)
+        // Theo tháng
         $revenueByMonth = Order::query()
             ->whereIn('status', $paidStatuses)
             ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") AS ym, COALESCE(SUM(total_amount),0) AS total_revenue, COUNT(*) AS order_count')
@@ -58,7 +52,7 @@ class ReportController extends Controller
             ->orderBy('ym')
             ->get();
 
-        // 6) Doanh thu theo NĂM (MySQL)
+        // Theo năm
         $revenueByYear = Order::query()
             ->whereIn('status', $paidStatuses)
             ->selectRaw('YEAR(created_at) AS y, COALESCE(SUM(total_amount),0) AS total_revenue, COUNT(*) AS order_count')
@@ -76,36 +70,38 @@ class ReportController extends Controller
         ));
     }
 
-    /**
-     * BÁO CÁO DẠNG BIỂU ĐỒ (Chart.js)
-     */
+    /** BÁO CÁO DẠNG BIỂU ĐỒ (Chart.js) */
     public function charts(Request $request)
     {
-        $paid = ['delivered', 'paid'];
+        $paid = ['delivered','paid'];
 
-        // 1) Doanh thu theo DANH MỤC
+        // 1) Danh mục (group chắc ăn, tránh alias)
         $byCat = DB::table('order_items as oi')
-            ->join('orders as o', 'oi.order_id', '=', 'o.id')
+            ->join('orders as o',   'oi.order_id',   '=', 'o.id')
             ->join('products as p', 'oi.product_id', '=', 'p.id')
             ->leftJoin('categories as c', 'p.category_id', '=', 'c.id')
             ->whereIn('o.status', $paid)
-            ->selectRaw('COALESCE(c.name, CONCAT("Danh mục #", p.category_id)) AS name')
-            ->selectRaw('SUM(oi.price * oi.quantity) AS revenue')
-            ->groupBy('name')->orderByDesc('revenue')
+            ->select(
+                'p.category_id',
+                DB::raw('COALESCE(c.name, CONCAT("Danh mục #", p.category_id)) AS cat_name'),
+                DB::raw('COALESCE(SUM(oi.price * oi.quantity),0) AS revenue')
+            )
+            ->groupBy('p.category_id','c.name')
+            ->orderByDesc('revenue')
             ->get();
 
-        $catLabels  = $byCat->pluck('name')->toArray();
+        $catLabels  = $byCat->pluck('cat_name')->toArray();
         $catRevenue = $byCat->pluck('revenue')->map(fn($v)=>(float)$v)->toArray();
 
-        // 2) Doanh thu theo NGÀY – 30 ngày gần nhất
-        $startDay = Carbon::now()->subDays(29)->startOfDay();
+        // 2) Theo ngày – 30 ngày gần nhất (điền 0 cho ngày thiếu)
+        $startDay = Carbon::now()->startOfDay()->subDays(29);
         $endDay   = Carbon::now()->endOfDay();
 
         $byDate = Order::whereIn('status', $paid)
             ->whereBetween('created_at', [$startDay, $endDay])
-            ->selectRaw('DATE(created_at) AS d, SUM(total_amount) AS revenue')
+            ->selectRaw('DATE(created_at) AS d, COALESCE(SUM(total_amount),0) AS revenue')
             ->groupBy('d')->orderBy('d')
-            ->pluck('revenue', 'd'); // map: 'Y-m-d' => revenue
+            ->pluck('revenue', 'd');
 
         $revDateLabels = [];
         $revDateData   = [];
@@ -115,36 +111,37 @@ class ReportController extends Controller
             $revDateData[]   = (float)($byDate[$key] ?? 0);
         }
 
-        // 3) Doanh thu theo THÁNG – 12 tháng gần nhất
-        $startMonth = Carbon::now()->subMonths(11)->startOfMonth();
+        // 3) Theo tháng – 12 tháng gần nhất (điền 0 cho tháng thiếu)
+        $startMonth = Carbon::now()->startOfMonth()->subMonths(11);
+
         $byMonth = Order::whereIn('status', $paid)
             ->where('created_at', '>=', $startMonth)
-            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") AS ym, SUM(total_amount) AS revenue')
+            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") AS ym, COALESCE(SUM(total_amount),0) AS revenue')
             ->groupBy('ym')->orderBy('ym')
-            ->pluck('revenue', 'ym'); // map: 'YYYY-mm' => revenue
+            ->pluck('revenue', 'ym');
 
         $revMonthLabels = [];
         $revMonthData   = [];
         for ($i=0; $i<12; $i++) {
-            $m   = $startMonth->copy()->addMonths($i);
+            $m = $startMonth->copy()->addMonths($i);
             $key = $m->format('Y-m');
             $revMonthLabels[] = $m->format('m/Y');
             $revMonthData[]   = (float)($byMonth[$key] ?? 0);
         }
 
-        // 4) Doanh thu theo NĂM
+        // 4) Theo năm
         $byYear = Order::whereIn('status', $paid)
-            ->selectRaw('YEAR(created_at) AS y, SUM(total_amount) AS revenue')
+            ->selectRaw('YEAR(created_at) AS y, COALESCE(SUM(total_amount),0) AS revenue')
             ->groupBy('y')->orderBy('y')->get();
 
         $revYearLabels = $byYear->pluck('y')->toArray();
         $revYearData   = $byYear->pluck('revenue')->map(fn($v)=>(float)$v)->toArray();
 
-        // 5) Doanh thu theo PHƯƠNG THỨC THANH TOÁN
-        $paymentMethodLabels = ['MOMO','COD'];
+        // 5) Theo phương thức thanh toán
+        $paymentMethodLabels  = ['MOMO','COD'];
         $paymentMethodRevenue = [
-            (float) Order::whereIn('status',$paid)->where('payment_method','momo')->sum('total_amount'),
-            (float) Order::whereIn('status',$paid)->where('payment_method','cod')->sum('total_amount'),
+            (float) Order::whereIn('status',$paid)->where('payment_method','momo')->sum('total_amount') ?? 0,
+            (float) Order::whereIn('status',$paid)->where('payment_method','cod')->sum('total_amount')  ?? 0,
         ];
 
         return view('admin.reports.charts', compact(

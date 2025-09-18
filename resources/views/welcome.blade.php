@@ -3,14 +3,42 @@
 
 @push('styles')
 <style>
-  /* ========= PALETTE lấy từ layout (light) =========
-     Dùng biến CSS trong layout để đồng bộ màu
-  */
   :root{
     --bg-50:#f7f8fb; --surface:#ffffff; --border:#e5e7eb;
     --text-900:#111827; --text-600:#4b5563; --text-400:#94a3b8;
     --primary-600:#2563eb; --primary-700:#1e40af; --accent-500:#fbbf24;
   }
+
+  /* ===== Banner (thêm mới) ===== */
+  .tv-banner{
+    position:relative; overflow:hidden; border-radius:18px; margin-bottom:24px;
+    border:1px solid var(--border); background:#fff;
+    box-shadow:0 8px 24px rgba(17,24,39,.08); height: 360px;
+  }
+  .tv-banner .slides{ position:relative; width:100%; height:100%; }
+  .tv-banner .slide{
+    position:absolute; inset:0; opacity:0; transition:opacity .6s ease;
+    background-size:cover; background-position:center;
+  }
+  .tv-banner .slide.is-active{ opacity:1; }
+  .tv-banner .nav{
+    position:absolute; top:50%; transform:translateY(-50%);
+    z-index:10; background:rgba(0,0,0,.38); color:#fff; border:none;
+    width:42px; height:42px; border-radius:50%; display:grid; place-items:center;
+    cursor:pointer;
+  }
+  .tv-banner .nav:hover{ background:rgba(0,0,0,.55); }
+  .tv-banner .prev{ left:14px; } .tv-banner .next{ right:14px; }
+
+  .tv-banner .dots{
+    position:absolute; left:0; right:0; bottom:12px; display:flex; gap:8px;
+    justify-content:center; z-index:10;
+  }
+  .tv-banner .dot{
+    width:8px; height:8px; border-radius:999px; background:rgba(255,255,255,.6);
+    border:1px solid rgba(0,0,0,.15);
+  }
+  .tv-banner .dot.is-active{ background:#fff; }
 
   /* ========= HERO ========= */
   .hero-box{
@@ -27,35 +55,26 @@
   .hero-sub{ color:var(--text-600); max-width:760px; font-size:1.04rem }
 
   .btn-cta{ padding:.85rem 1.1rem; border-radius:12px; font-weight:800; letter-spacing:.2px }
-  .btn-cta-primary{
-    background:linear-gradient(135deg,var(--primary-600),#60a5fa);
-    color:#fff; border:none;
-  }
+  .btn-cta-primary{ background:linear-gradient(135deg,var(--primary-600),#60a5fa); color:#fff; border:none; }
   .btn-cta-primary:hover{ filter:brightness(.97) }
-  .btn-cta-ghost{
-    background:#ffffff; border:1px solid var(--border); color:var(--text-900);
-  }
+  .btn-cta-ghost{ background:#ffffff; border:1px solid var(--border); color:var(--text-900); }
   .btn-cta-ghost:hover{ background:#f9fafb }
 
   /* ========= CATEGORY CHIPS ========= */
   .chip{
-    display:inline-flex; align-items:center; gap:.45rem;
-    padding:.5rem .8rem; border-radius:999px;
-    color:var(--text-600); background:#fff; border:1px solid var(--border);
-    text-decoration:none; transition:.2s; white-space:nowrap;
-    box-shadow:0 2px 6px rgba(17,24,39,.04);
+    display:inline-flex; align-items:center; gap:.45rem; padding:.5rem .8rem; border-radius:999px;
+    color:var(--text-600); background:#fff; border:1px solid var(--border); text-decoration:none;
+    transition:.2s; white-space:nowrap; box-shadow:0 2px 6px rgba(17,24,39,.04);
   }
   .chip:hover{ background:#eef2ff; color:var(--primary-700); border-color:#dbe3ff }
 
-  /* ========= PRODUCT GRID (đồng bộ product index - light) ========= */
+  /* ========= PRODUCT GRID ========= */
   .shop-grid{ margin-top:.25rem }
   .card-product{
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:14px; box-shadow:0 8px 20px rgba(17,24,39,.06);
-    transition:.18s; display:flex; flex-direction:column; overflow:hidden; height:auto;
+    background:var(--surface); border:1px solid var(--border); border-radius:14px;
+    box-shadow:0 8px 20px rgba(17,24,39,.06); transition:.18s; display:flex; flex-direction:column; overflow:hidden;
   }
   .card-product:hover{ transform:translateY(-2px); box-shadow:0 12px 26px rgba(17,24,39,.10) }
-
   .cp-img-wrap{ height:200px; border-bottom:1px solid var(--border); background:#f3f4f6 }
   .cp-img{ width:100%; height:100%; object-fit:cover; display:block }
   .cp-body{ padding:14px 16px; flex:1; min-height:90px }
@@ -78,41 +97,30 @@
     box-shadow: 0 4px 10px rgba(37,99,235,.25);
   }
 
-  /* ========= FEATURE PANEL (bên phải HERO) ========= */
+  /* ========= FEATURE PANEL ========= */
   .panel-feature{
     position:relative; padding:16px 16px 18px; border-radius:14px;
     background: linear-gradient(180deg,#ffffff,#f9fafb);
     border:1px solid var(--border); box-shadow:0 8px 20px rgba(17,24,39,.06);
   }
   .f-head{ display:flex; align-items:center; gap:.8rem; margin-bottom:10px; }
-  .f-badge{
-    width:48px; height:48px; border-radius:12px; display:grid; place-items:center;
-    color:#fff; font-weight:900; font-size:18px;
-    background:linear-gradient(135deg,var(--primary-600),#60a5fa);
-    box-shadow:0 6px 14px rgba(37,99,235,.3);
-  }
+  .f-badge{ width:48px; height:48px; border-radius:12px; display:grid; place-items:center; color:#fff; font-weight:900; font-size:18px; background:linear-gradient(135deg,var(--primary-600),#60a5fa); box-shadow:0 6px 14px rgba(37,99,235,.3); }
   .f-title{ color:var(--text-900); font-weight:800; font-size:1.05rem; margin-bottom:2px }
   .f-sub  { color:var(--text-600); font-size:.9rem }
-
   .benefit-col{ display:flex; gap:.8rem }
   .pill{
-    flex:1; min-height:190px; display:flex; flex-direction:column; gap:.35rem;
-    padding:14px; border-radius:12px; color:var(--text-900);
-    background:#ffffff; border:1px solid var(--border);
-    box-shadow:0 6px 14px rgba(17,24,39,.06);
-    transition:transform .18s ease, box-shadow .18s ease;
+    flex:1; min-height:190px; display:flex; flex-direction:column; gap:.35rem; padding:14px; border-radius:12px;
+    color:var(--text-900); background:#ffffff; border:1px solid var(--border);
+    box-shadow:0 6px 14px rgba(17,24,39,.06); transition:transform .18s ease, box-shadow .18s ease;
   }
   .pill:hover{ transform:translateY(-2px); box-shadow:0 10px 22px rgba(17,24,39,.10) }
-  .pill-dot{
-    width:26px;height:26px;border-radius:999px;display:grid;place-items:center;
-    font-size:.78rem;font-weight:900;color:#fff;
-    background:linear-gradient(135deg,#60a5fa,var(--primary-600));
-    box-shadow:0 4px 10px rgba(37,99,235,.28);
-  }
+  .pill-dot{ width:26px;height:26px;border-radius:999px;display:grid;place-items:center;font-size:.78rem;font-weight:900;color:#fff;background:linear-gradient(135deg,#60a5fa,var(--primary-600)); box-shadow:0 4px 10px rgba(37,99,235,.28); }
   .pill-title{ font-weight:800; color:var(--text-900); margin:2px 0 2px }
   .pill-desc { font-size:.95rem; line-height:1.35; color:var(--text-600) }
-
-  @media (max-width: 991.98px){ .benefit-col{ flex-direction:column } }
+  @media (max-width: 991.98px){
+    .benefit-col{ flex-direction:column }
+    .tv-banner{ height: 240px; }
+  }
 </style>
 @endpush
 
@@ -123,7 +131,32 @@
   $hotCategories    = $hotCategories    ?? \App\Models\Category::latest()->take(6)->get();
   $featuredProducts = $featuredProducts ?? \App\Models\Product::latest()->take(8)->get();
   $isAdmin = auth()->check() && (auth()->user()->role === 'admin');
+
+  // Banner: có thể truyền $banners từ controller; nếu không dùng mặc định dưới
+  $banners = $banners ?? [
+    'https://cdn.nguyenkimmall.com/images/companies/_1/MKT_ECM/0925/Japan%20month/Cate-AV-897x350.jpg',
+    'https://cdn.nguyenkimmall.com/images/companies/_1/MKT_ECM/0825/dealsheet/av/897x350.jpg',
+    'https://cdn.nguyenkimmall.com/images/companies/_1/MKT_ECM/0925/dealsheet/av/NK%20879x350.jpg',
+  ];
 @endphp
+
+{{-- ===== Banner Carousel (mới) ===== --}}
+@if(!empty($banners))
+<div id="homeBanner" class="tv-banner" data-interval="4500">
+  <div class="slides">
+    @foreach($banners as $idx => $url)
+      <div class="slide {{ $idx===0?'is-active':'' }}" style="background-image:url('{{ $url }}')"></div>
+    @endforeach
+  </div>
+  <button class="nav prev" aria-label="Ảnh trước">&#10094;</button>
+  <button class="nav next" aria-label="Ảnh sau">&#10095;</button>
+  <div class="dots">
+    @foreach($banners as $idx => $url)
+      <span class="dot {{ $idx===0?'is-active':'' }}" data-index="{{ $idx }}"></span>
+    @endforeach
+  </div>
+</div>
+@endif
 
 {{-- ========= HERO ========= --}}
 <div class="hero-box mb-4">
@@ -300,3 +333,39 @@
   </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+(function(){
+  const root = document.getElementById('homeBanner');
+  if(!root) return;
+
+  const slides = root.querySelectorAll('.slide');
+  const dots   = root.querySelectorAll('.dot');
+  const prev   = root.querySelector('.prev');
+  const next   = root.querySelector('.next');
+  const delay  = parseInt(root.dataset.interval || '4500', 10);
+
+  let i = 0, timer;
+
+  function go(n){
+    slides[i].classList.remove('is-active');
+    dots[i]?.classList.remove('is-active');
+    i = (n + slides.length) % slides.length;
+    slides[i].classList.add('is-active');
+    dots[i]?.classList.add('is-active');
+  }
+  function start(){ timer = setInterval(()=>go(i+1), delay); }
+  function stop(){ clearInterval(timer); }
+
+  prev.addEventListener('click', ()=>{ go(i-1); stop(); start(); });
+  next.addEventListener('click', ()=>{ go(i+1); stop(); start(); });
+  dots.forEach(d=> d.addEventListener('click', e => { go(parseInt(d.dataset.index,10)); stop(); start(); }));
+
+  root.addEventListener('mouseenter', stop);
+  root.addEventListener('mouseleave', start);
+
+  start();
+})();
+</script>
+@endpush

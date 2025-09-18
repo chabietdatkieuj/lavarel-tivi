@@ -114,8 +114,12 @@ $products = $query->paginate(auth()->check() && auth()->user()->role==='admin' ?
         return redirect()->route('products.index')->with('success', 'Xóa sản phẩm thành công!');
     }
 
-    public function show(Product $product)
-    {
-        return view('products.show', compact('product'));
-    }
+   public function show(Product $product)
+{
+    // Eager load để partial ở view không tạo N+1
+    $product->load(['category', 'reviews.user', 'reviews.replies.admin']);
+
+    return view('products.show', compact('product'));
+}
+
 }
