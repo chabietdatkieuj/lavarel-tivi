@@ -149,7 +149,7 @@
     <div class="container">
         {{-- Logo --}}
         <a class="brand-wrap" href="{{ route('welcome') }}">
-            <div class="brand-icon">TV</div>
+            <div class="brand-icon">ND</div>
             <div class="brand-text">TV Store</div>
         </a>
 
@@ -268,6 +268,12 @@
                 <a class="nav-link {{ request()->routeIs('admin.vouchers.*') ? 'active' : '' }}"
                    href="{{ route('admin.vouchers.index') }}">🎟️ Quản lý Voucher</a>
                 @endif
+
+                {{-- ✅ NEW: Hỗ trợ trực tuyến (admin) --}}
+                @if(Route::has('admin.chats.index'))
+                <a class="nav-link {{ request()->routeIs('admin.chats.*') ? 'active' : '' }}"
+                   href="{{ route('admin.chats.index') }}">💬 Hỗ trợ trực tuyến</a>
+                @endif
             </nav>
         </aside>
 
@@ -326,6 +332,120 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+{{-- ✅ NEW: Live Chat widget cho khách (đã đăng nhập, role=customer) --}}
+@auth
+@if((auth()->user()->role ?? 'customer') === 'customer')
+<style>
+  .chat-fab{
+    position: fixed; left:18px; bottom:18px; z-index:9999;
+    width:52px; height:52px; border-radius:50%;
+    background:linear-gradient(135deg,#2563eb,#60a5fa); color:#fff;
+    display:grid; place-items:center; font-weight:900; box-shadow:0 10px 24px rgba(0,0,0,.2);
+    cursor:pointer;
+  }
+  .chat-panel{
+    position: fixed; left:18px; bottom:80px; z-index:9999; width:320px; max-height:420px;
+    background:#fff; border:1px solid #e5e7eb; border-radius:12px; box-shadow:0 10px 24px rgba(0,0,0,.2);
+    display:none; overflow:hidden;
+  }
+  .chat-header{ background:#f9fafb; padding:10px 12px; font-weight:800; border-bottom:1px solid #e5e7eb }
+  .chat-body{ height:300px; overflow:auto; padding:10px }
+  .chat-row{ margin-bottom:8px; display:flex }
+  .chat-row.user  { justify-content:flex-end }
+  .chat-msg{
+    max-width:70%; padding:8px 10px; border-radius:10px; font-size:.92rem;
+    background:#e5e7eb; color:#111827;
+  }
+  .chat-row.user .chat-msg{ background:#dbeafe }
+  .chat-footer{ display:flex; gap:6px; padding:8px; border-top:1px solid #e5e7eb; background:#f9fafb }
+</style>
+
+<div class="chat-fab" id="chatFab">💬</div>
+
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-header">Hỗ trợ trực tuyến</div>
+  <div class="chat-body" id="chatBody"></div>
+  <div class="chat-footer">
+    <input id="chatInput" class="form-control form-control-sm" placeholder="Nhập tin nhắn...">
+    <button id="chatSend" class="btn btn-primary btn-sm">Gửi</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const fab    = document.getElementById('chatFab');
+  const panel  = document.getElementById('chatPanel');
+  const body   = document.getElementById('chatBody');
+  const input  = document.getElementById('chatInput');
+  const sendBt = document.getElementById('chatSend');
+
+  let lastId = 0; let opened = false; let timer = null;
+
+  function togglePanel(){
+    opened = !opened;
+    panel.style.display = opened ? 'block' : 'none';
+    if(opened){
+      fetchMsgs(true);
+      timer = setInterval(fetchMsgs, 3000);
+    } else {
+      clearInterval(timer);
+    }
+  }
+
+  function render(msgs){
+    msgs.forEach(m => {
+      lastId = Math.max(lastId, m.id);
+      const row = document.createElement('div');
+      row.className = 'chat-row ' + (m.sender_role === 'user' ? 'user':'');
+      const b = document.createElement('div');
+      b.className = 'chat-msg';
+      b.textContent = m.body;
+      row.appendChild(b);
+      body.appendChild(row);
+    });
+    body.scrollTop = body.scrollHeight;
+  }
+
+  async function fetchMsgs(initial=false){
+    try{
+      const url = `{{ route('chat.fetch') }}` + (lastId ? `?after_id=${lastId}` : '');
+      const res = await fetch(url, {headers:{'X-Requested-With':'XMLHttpRequest'}});
+      if(!res.ok) return;
+      const json = await res.json();
+      if(json.messages && json.messages.length){
+        render(json.messages);
+      }
+    }catch(e){}
+  }
+
+  async function sendMsg(){
+    const text = (input.value || '').trim();
+    if(!text) return;
+    input.value='';
+    try{
+      await fetch(`{{ route('chat.send') }}`,{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+          'X-Requested-With':'XMLHttpRequest'
+        },
+        body: JSON.stringify({body:text})
+      });
+      // push ngay vào UI cho mượt
+      render([{id:lastId+1, sender_role:'user', body:text}]);
+    }catch(e){}
+  }
+
+  fab.addEventListener('click', togglePanel);
+  sendBt.addEventListener('click', sendMsg);
+  input.addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });
+})();
+</script>
+@endif
+@endauth
+
 @stack('scripts')
 </body>
 </html>

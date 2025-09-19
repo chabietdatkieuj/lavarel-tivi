@@ -87,7 +87,7 @@
               COD - Thanh toán khi nhận hàng
             </option>
             <option value="momo" {{ old('payment_method')==='momo' ? 'selected' : '' }}>
-              MoMo (thử nghiệm)
+              MoMo 
             </option>
           </select>
         </div>

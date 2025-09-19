@@ -23,6 +23,10 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VoucherController as AdminVoucherController;
 use App\Http\Controllers\PromoController;
 
+// NEW: CHAT
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\Admin\ChatAdminController;
+
 /* =========================
  *  TRANG CHỦ (public)
  * ========================= */
@@ -62,7 +66,7 @@ Route::middleware(['auth','verified'])->group(function () {
         Route::resource('categories', CategoryController::class)->except(['index','show']);
         Route::resource('products',   ProductController::class)->except(['index','show']);
 
-        // Báo cáo + Người dùng + Quản lý đánh giá + Vouchers
+        // Báo cáo + Người dùng + Quản lý đánh giá + Vouchers + Chat admin
         Route::prefix('admin')->name('admin.')->group(function () {
             // Reports
             Route::get('/reports',        [ReportController::class, 'index'])->name('reports.index');
@@ -80,8 +84,14 @@ Route::middleware(['auth','verified'])->group(function () {
             Route::delete('/reviews/replies/{reply}',  [AdminReviewController::class, 'replyDestroy'])->name('reviews.replies.destroy');
 
             // ✅ Voucher CRUD cho Admin
-        Route::resource('vouchers', AdminVoucherController::class);
-        
+            Route::resource('vouchers', AdminVoucherController::class);
+
+            // ✅ NEW: CHAT (Admin UI + API)
+            Route::get ('/chats',                       [ChatAdminController::class,'index'])->name('chats.index');
+            Route::get ('/chats/{conversation}',        [ChatAdminController::class,'show'])->name('chats.show');
+            Route::post('/chats/{conversation}/send',   [ChatAdminController::class,'send'])->name('chats.send');
+            Route::get ('/chats/{conversation}/fetch',  [ChatAdminController::class,'fetch'])->name('chats.fetch');
+            Route::post('/chats/{conversation}/close',  [ChatAdminController::class,'close'])->name('chats.close');
         });
     });
 
@@ -116,8 +126,12 @@ Route::middleware(['auth','verified'])->group(function () {
         Route::post('/orders/{order}/reviews/{product}',        [ReviewController::class,'store'])->name('reviews.store');
 
         // ✅ Trang khuyến mãi/tin tức cho KH
-    Route::get('/promos', [PromoController::class,'index'])->name('promos.index');
-    Route::get('/vouchers/news', [PromoController::class,'index'])->name('vouchers.news');
+        Route::get('/promos', [PromoController::class,'index'])->name('promos.index');
+        Route::get('/vouchers/news', [PromoController::class,'index'])->name('vouchers.news');
+
+        // ✅ NEW: CHAT (User API)
+        Route::post('/chat/send',  [ChatController::class,'send'])->name('chat.send');
+        Route::get ('/chat/fetch', [ChatController::class,'fetch'])->name('chat.fetch');
     });
 
     /* ---------------------------------
