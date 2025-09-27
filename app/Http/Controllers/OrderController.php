@@ -16,18 +16,24 @@ class OrderController extends Controller
 {
     /** Hiển thị form Checkout (lấy hàng từ carts/cart_items) */
     public function create(Request $request)
-    {
-        $cart  = Cart::firstOrCreate(['user_id' => auth()->id()]);
-        $items = $cart->items()->with('product')->get();
+{
+    $cart  = Cart::firstOrCreate(['user_id' => auth()->id()]);
+    $items = $cart->items()->with('product')->get();
 
-        if ($items->isEmpty()) {
-            return redirect()->route('cart.index')->with('error', 'Giỏ hàng trống!');
-        }
-
-        $total = $items->sum(fn($i) => $i->quantity * $i->price);
-
-        return view('checkout.create', compact('items', 'total'));
+    if ($items->isEmpty()) {
+        return redirect()->route('cart.index')->with('error', 'Giỏ hàng trống!');
     }
+
+    $total = $items->sum(fn($i) => $i->quantity * $i->price);
+
+    // 👇 THÊM DÒNG NÀY
+    $addresses = auth()->check()
+        ? auth()->user()->addresses()->orderByDesc('is_default')->get()
+        : collect();
+
+    // 👇 THAY return view cũ bằng dòng có $addresses
+    return view('checkout.create', compact('items', 'total', 'addresses'));
+}
 
     /** Xử lý đặt hàng: COD mặc định; MoMo optional (+ áp mã giảm giá) */
     public function store(Request $request)

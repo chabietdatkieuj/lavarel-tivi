@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\UserController;
 
+
 // NEW: Vouchers/Promos controllers
 use App\Http\Controllers\Admin\VoucherController as AdminVoucherController;
 use App\Http\Controllers\PromoController;
@@ -26,9 +27,8 @@ use App\Http\Controllers\PromoController;
 // NEW: CHAT
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Admin\ChatAdminController;
-
-// NEW: PROFILE (đổi thông tin / mật khẩu)
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AddressController;
 
 /* =========================
  *  TRANG CHỦ (public)
@@ -39,6 +39,8 @@ Route::get('/', function () {
         'featuredProducts' => Product::latest()->take(8)->get(),
     ]);
 })->name('welcome');
+Route::resource('categories', CategoryController::class)->only(['index','show']);
+    Route::resource('products',   ProductController::class)->only(['index','show']);
 
 /* =========================
  *  MoMo CALLBACK/IPN (public để MoMo gọi)
@@ -50,13 +52,6 @@ Route::post('/payment/momo/ipn',      [OrderController::class,'ipn'])->name('pay
  *  VÙNG ĐÃ ĐĂNG NHẬP + XÁC THỰC EMAIL
  * ========================= */
 Route::middleware(['auth','verified'])->group(function () {
-
-    /* ---------- NEW: PROFILE (cho mọi user đã đăng nhập) ---------- */
-    Route::get  ('/account',                 [ProfileController::class,'edit'])->name('account.edit');                 // Trang sửa thông tin
-    Route::patch('/account',                 [ProfileController::class,'update'])->name('account.update');             // Lưu thông tin
-    Route::get  ('/account/password',        [ProfileController::class,'editPassword'])->name('account.password.edit'); // Trang đổi mật khẩu
-    Route::patch('/account/password',        [ProfileController::class,'updatePassword'])->name('account.password.update'); // Lưu mật khẩu
-    /* ---------------------------------------------------------------- */
 
     /* ---------------------------------
      *  ADMIN (role=admin)
@@ -104,12 +99,18 @@ Route::middleware(['auth','verified'])->group(function () {
             Route::post('/chats/{conversation}/close',  [ChatAdminController::class,'close'])->name('chats.close');
         });
     });
+     // Profile
+    Route::get('/account/profile', [AccountController::class,'editProfile'])->name('account.profile.edit');
+    Route::put('/account/profile', [AccountController::class,'updateProfile'])->name('account.profile.update');
+
+    // Password
+    Route::get('/account/password', [AccountController::class,'editPassword'])->name('account.password.edit');
+    Route::put('/account/password', [AccountController::class,'updatePassword'])->name('account.password.update');
 
     /* ---------------------------------
      *  CUSTOMER: chỉ XEM danh mục & sản phẩm
      * --------------------------------- */
-    Route::resource('categories', CategoryController::class)->only(['index','show']);
-    Route::resource('products',   ProductController::class)->only(['index','show']);
+    
 
     /* ---------------------------------
      *  CUSTOMER: CART + CHECKOUT + LỊCH SỬ ĐƠN + TẠO REVIEW
@@ -142,6 +143,11 @@ Route::middleware(['auth','verified'])->group(function () {
         // ✅ NEW: CHAT (User API)
         Route::post('/chat/send',  [ChatController::class,'send'])->name('chat.send');
         Route::get ('/chat/fetch', [ChatController::class,'fetch'])->name('chat.fetch');
+         Route::get('/account/addresses', [AddressController::class,'index'])->name('account.addresses.index');
+    Route::post('/account/addresses', [AddressController::class,'store'])->name('account.addresses.store');
+    Route::put('/account/addresses/{address}', [AddressController::class,'update'])->name('account.addresses.update');
+    Route::delete('/account/addresses/{address}', [AddressController::class,'destroy'])->name('account.addresses.destroy');
+    Route::patch('/account/addresses/{address}/default', [AddressController::class,'makeDefault'])->name('account.addresses.default');
     });
 
     /* ---------------------------------

@@ -24,7 +24,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'role',
         'email_verified_at',
-        'phone','address',
+
 
     ];
     public function cart()
@@ -42,6 +42,10 @@ public function cartItems()
         'id',        // Local key on users table...
         'id'         // Local key on carts table...
     );
+}
+public function addresses()
+{
+    return $this->hasMany(\App\Models\Address::class);
 }
 
 

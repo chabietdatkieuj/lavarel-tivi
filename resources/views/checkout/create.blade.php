@@ -43,13 +43,36 @@
 @section('content')
 <h2 class="checkout-title mb-3">🧾 Thanh toán</h2>
 
-
-
 <div class="row g-3">
   <div class="col-lg-7">
     <form id="checkoutForm" action="{{ route('checkout.store') }}" method="POST" class="checkout-card" novalidate>
       @csrf
       <div class="card-body p-3">
+
+        {{-- ========== CHỌN ĐỊA CHỈ LƯU SẴN (nếu có) ========== --}}
+        @if(isset($addresses) && $addresses->count())
+          <div class="mb-3">
+            <label class="form-label">Chọn địa chỉ giao hàng</label>
+            <select id="addressSelect" class="form-select">
+              @foreach($addresses as $a)
+                <option value="{{ $a->id }}"
+                        data-name="{{ $a->receiver_name }}"
+                        data-phone="{{ $a->receiver_phone }}"
+                        data-address="{{ $a->full_address }}"
+                        @selected($a->is_default)>
+                  {{ $a->receiver_name }} • {{ $a->receiver_phone }} — {{ $a->full_address }}
+                  {{ $a->is_default ? '(Mặc định)' : '' }}
+                </option>
+              @endforeach
+              <option value="__custom__">-- Nhập địa chỉ khác --</option>
+            </select>
+            <div class="hint mt-1">
+              <a href="{{ route('account.addresses.index') }}" target="_blank">Quản lý địa chỉ</a>
+            </div>
+          </div>
+        @endif
+        {{-- ========== HẾT: CHỌN ĐỊA CHỈ LƯU SẴN ========== --}}
+
         <div class="mb-3">
           <label class="form-label">Họ tên người nhận</label>
           <input type="text" name="shipping_name" class="form-control"
@@ -75,7 +98,7 @@
               COD - Thanh toán khi nhận hàng
             </option>
             <option value="momo" {{ old('payment_method')==='momo' ? 'selected' : '' }}>
-              MoMo 
+              MoMo
             </option>
           </select>
         </div>
@@ -158,6 +181,42 @@
         btn.textContent = 'Đang xử lý...';
       });
     }
+  })();
+
+  // Auto-fill theo địa chỉ đã lưu (nếu có)
+  (function(){
+    const sel = document.getElementById('addressSelect');
+    if(!sel) return;
+
+    const nameI = document.querySelector('input[name="shipping_name"]');
+    const phoneI= document.querySelector('input[name="shipping_phone"]');
+    const addrI = document.querySelector('input[name="shipping_address"]');
+
+    // Chỉ fill nếu input đang trống (tránh ghi đè old())
+    function applySelected(){
+      const opt = sel.options[sel.selectedIndex];
+      if(!opt || opt.value === '__custom__') return;
+      if(!nameI.value)  nameI.value  = opt.dataset.name || '';
+      if(!phoneI.value) phoneI.value = opt.dataset.phone || '';
+      if(!addrI.value)  addrI.value  = opt.dataset.address || '';
+    }
+
+    sel.addEventListener('change', function(){
+      if(this.value === '__custom__'){
+        // Cho phép nhập tay
+        nameI.value = ''; phoneI.value = ''; addrI.value = '';
+        nameI.focus();
+      } else {
+        // Ghi đè khi user thật sự chọn 1 địa chỉ
+        const opt = this.options[this.selectedIndex];
+        nameI.value  = opt.dataset.name || '';
+        phoneI.value = opt.dataset.phone || '';
+        addrI.value  = opt.dataset.address || '';
+      }
+    });
+
+    // Fill ngay khi mở trang nếu option mặc định đang chọn
+    applySelected();
   })();
 </script>
 @endpush

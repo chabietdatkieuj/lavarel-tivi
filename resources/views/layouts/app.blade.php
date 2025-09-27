@@ -212,16 +212,17 @@
                             @endif
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-    <li><a class="dropdown-item" href="{{ route('account.edit') }}">👤 Thông tin tài khoản</a></li>
-    <li><a class="dropdown-item" href="{{ route('account.password.edit') }}">🔒 Đổi mật khẩu</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li>
-        <form action="{{ route('logout') }}" method="POST" class="m-0">
-            @csrf
-            <button type="submit" class="dropdown-item">🚪 Đăng xuất</button>
-        </form>
-    </li>
-</ul>
+                            <li><a class="dropdown-item" href="{{ route('account.profile.edit') }}">Đổi thông tin</a></li>
+<li><a class="dropdown-item" href="{{ route('account.password.edit') }}">Đổi mật khẩu</a></li>
+<li><hr class="dropdown-divider"></li>
+<li><a class="dropdown-item" href="{{ route('account.addresses.index') }}">Địa chỉ của tôi</a></li>
+                            <li>
+                                <form action="{{ route('logout') }}" method="POST" class="m-0">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item">🚪 Đăng xuất</button>
+                                </form>
+                            </li>
+                        </ul>
                     </li>
                 @else
                     <li class="nav-item me-2">
