@@ -29,6 +29,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Admin\ChatAdminController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AddressController;
+use App\Http\Controllers\PasswordResetController;
 
 /* =========================
  *  TRANG CHỦ (public)
@@ -39,14 +40,36 @@ Route::get('/', function () {
         'featuredProducts' => Product::latest()->take(8)->get(),
     ]);
 })->name('welcome');
-Route::resource('categories', CategoryController::class)->only(['index','show']);
-    Route::resource('products',   ProductController::class)->only(['index','show']);
+
+
 
 /* =========================
  *  MoMo CALLBACK/IPN (public để MoMo gọi)
  * ========================= */
 Route::get ('/payment/momo/callback', [OrderController::class,'callback'])->name('payment.momo.callback');
 Route::post('/payment/momo/ipn',      [OrderController::class,'ipn'])->name('payment.momo.ipn');
+Route::middleware('guest')->group(function () {
+    // 1) Form nhập email để nhận link đặt lại
+    Route::get ('/password/forgot', [PasswordResetController::class,'showLinkRequestForm'])
+        ->name('password.request');
+
+    // 2) Gửi email đặt lại mật khẩu (limit nhẹ để chống spam)
+    Route::post('/password/email',  [PasswordResetController::class,'sendResetLinkEmail'])
+        ->middleware('throttle:6,1')
+        ->name('password.email');
+
+    // 2.5) Trang thông báo "đã gửi email"
+    Route::get ('/password/sent',   [PasswordResetController::class,'sent'])
+        ->name('password.sent');
+
+    // 3) Form đặt lại mật khẩu mở từ email
+    Route::get ('/password/reset/{token}', [PasswordResetController::class,'showResetForm'])
+        ->name('password.reset');
+
+    // 4) Submit đặt lại mật khẩu
+    Route::post('/password/reset',         [PasswordResetController::class,'reset'])
+        ->name('password.update');
+});
 
 /* =========================
  *  VÙNG ĐÃ ĐĂNG NHẬP + XÁC THỰC EMAIL
@@ -106,11 +129,13 @@ Route::middleware(['auth','verified'])->group(function () {
     // Password
     Route::get('/account/password', [AccountController::class,'editPassword'])->name('account.password.edit');
     Route::put('/account/password', [AccountController::class,'updatePassword'])->name('account.password.update');
+    
 
     /* ---------------------------------
      *  CUSTOMER: chỉ XEM danh mục & sản phẩm
      * --------------------------------- */
-    
+    Route::resource('categories', CategoryController::class)->only(['index','show']);
+    Route::resource('products',   ProductController::class)->only(['index','show']);
 
     /* ---------------------------------
      *  CUSTOMER: CART + CHECKOUT + LỊCH SỬ ĐƠN + TẠO REVIEW

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'TV Store')</title>
+    <title>@yield('title', 'Airconditioner shop')</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -150,7 +150,7 @@
         {{-- Logo --}}
         <a class="brand-wrap" href="{{ route('welcome') }}">
             <div class="brand-icon">ND</div>
-            <div class="brand-text">TV Store</div>
+            <div class="brand-text">Shop Điều Hòa</div>
         </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -170,7 +170,7 @@
                 @unless($isAdmin)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}"
-                           href="{{ route('categories.index') }}">📂 Danh mục Tivi</a>
+                           href="{{ route('categories.index') }}">📂 Danh mục </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}"
@@ -212,16 +212,18 @@
                             @endif
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{{ route('account.profile.edit') }}">Đổi thông tin</a></li>
-<li><a class="dropdown-item" href="{{ route('account.password.edit') }}">Đổi mật khẩu</a></li>
-<li><hr class="dropdown-divider"></li>
-<li><a class="dropdown-item" href="{{ route('account.addresses.index') }}">Địa chỉ của tôi</a></li>
-                            <li>
+                            <li><a class="dropdown-item" href="{{ route('account.profile.edit') }}">🧑‍💼 Đổi thông tin</a></li>
+                            <li><a class="dropdown-item" href="{{ route('account.password.edit') }}">🔒 Đổi mật khẩu</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                                @unless($isAdmin)   {{-- chỉ KHÁCH HÀNG mới thấy --}}
+                                <li><a class="dropdown-item" href="{{ route('account.addresses.index') }}">📍 Địa chỉ của tôi</a></li>
+                                 @endunless
+                             <li>
                                 <form action="{{ route('logout') }}" method="POST" class="m-0">
                                     @csrf
                                     <button type="submit" class="dropdown-item">🚪 Đăng xuất</button>
                                 </form>
-                            </li>
+                             </li>
                         </ul>
                     </li>
                 @else
@@ -332,7 +334,7 @@
 
 <footer class="py-4">
     <div class="container text-center">
-        <div class="small mb-1">© {{ date('Y') }} <strong>TV Store</strong>. All rights reserved.</div>
+        <div class="small mb-1">© {{ date('Y') }} <strong>Air Conditioner</strong>. All rights reserved.</div>
         <div class="small">
             <a href="#">Chính sách bảo hành</a> •
             <a href="#">Liên hệ</a>

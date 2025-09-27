@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'TV Store - Trang chủ')
+@section('title', 'Airconditioner shop - Trang chủ')
 
 @push('styles')
 <style>
@@ -9,7 +9,7 @@
     --primary-600:#2563eb; --primary-700:#1e40af; --accent-500:#fbbf24;
   }
 
-  /* ===== Banner (thêm mới) ===== */
+  /* ===== Banner ===== */
   .tv-banner{
     position:relative; overflow:hidden; border-radius:18px; margin-bottom:24px;
     border:1px solid var(--border); background:#fff;
@@ -29,7 +29,6 @@
   }
   .tv-banner .nav:hover{ background:rgba(0,0,0,.55); }
   .tv-banner .prev{ left:14px; } .tv-banner .next{ right:14px; }
-
   .tv-banner .dots{
     position:absolute; left:0; right:0; bottom:12px; display:flex; gap:8px;
     justify-content:center; z-index:10;
@@ -132,15 +131,15 @@
   $featuredProducts = $featuredProducts ?? \App\Models\Product::latest()->take(8)->get();
   $isAdmin = auth()->check() && (auth()->user()->role === 'admin');
 
-  // Banner: có thể truyền $banners từ controller; nếu không dùng mặc định dưới
+  // Banner điều hòa (có thể thay bằng ảnh của bạn)
   $banners = $banners ?? [
-    'https://cdn.nguyenkimmall.com/images/companies/_1/MKT_ECM/0925/Japan%20month/Cate-AV-897x350.jpg',
-    'https://cdn.nguyenkimmall.com/images/companies/_1/MKT_ECM/0825/dealsheet/av/897x350.jpg',
-    'https://cdn.nguyenkimmall.com/images/companies/_1/MKT_ECM/0925/dealsheet/av/NK%20879x350.jpg',
+    'https://cdn.mediamart.vn/images/banner/dh-lg_54ecf50d.webp', // technician installing AC
+    'https://cdn.mediamart.vn/images/banner/dieu-hoa-samsung_a9afd72a.webp', // cozy living room AC
+    'https://cdn.mediamart.vn/images/banner/dat-truoc-dieu-hoa-pana_81c8b347.webp', // modern interior
   ];
 @endphp
 
-{{-- ===== Banner Carousel (mới) ===== --}}
+{{-- ===== Banner Carousel ===== --}}
 @if(!empty($banners))
 <div id="homeBanner" class="tv-banner" data-interval="4500">
   <div class="slides">
@@ -163,10 +162,10 @@
   <div class="row align-items-center">
     <div class="col-lg-7">
       <h1 class="hero-title mb-3">
-        Nâng tầm trải nghiệm <span class="text-primary">TV Store</span>
+        Nâng tầm trải nghiệm <span class="text-primary">Airconditioner shop</span>
       </h1>
       <p class="hero-sub">
-        Kho Tivi mới nhất, hình ảnh sắc nét, âm thanh sống động.
+        Kho Điều hòa đa dạng: Inverter tiết kiệm điện, làm lạnh nhanh, lọc bụi mịn.
         @guest Đăng nhập/đăng ký để bắt đầu mua sắm ngay hôm nay!
         @else Quản lý danh mục, sản phẩm và đặt hàng nhanh chóng. @endguest
       </p>
@@ -178,49 +177,49 @@
         @else
           @if($isAdmin)
             <a href="{{ route('admin.dashboard') }}" class="btn btn-cta btn-cta-primary">⚙️ Bảng điều khiển</a>
-            <a href="{{ route('products.index') }}" class="btn btn-cta btn-cta-ghost">🛒 Quản lý sản phẩm</a>
+            <a href="{{ route('products.index') }}" class="btn btn-cta btn-cta-ghost">📦 Quản lý sản phẩm</a>
           @else
             <a href="{{ route('categories.index') }}" class="btn btn-cta btn-cta-primary">📂 Vào Danh mục</a>
-            <a href="{{ route('products.index') }}" class="btn btn-cta btn-cta-ghost">🛒 Xem Sản phẩm</a>
+            <a href="{{ route('products.index') }}" class="btn btn-cta btn-cta-ghost">🛍️ Xem Sản phẩm</a>
           @endif
         @endguest
       </div>
     </div>
 
-    {{-- Panel ưu đãi --}}
+    {{-- Panel tiện ích --}}
     <div class="col-lg-5 mt-4 mt-lg-0">
       <div class="panel-feature">
         <div class="f-head">
-          <div class="f-badge">TV</div>
+          <div class="f-badge">AC</div>
           <div>
-            <div class="f-title">Siêu ưu đãi</div>
-            <div class="f-sub">Hàng mới mỗi ngày • Bảo hành 24 tháng</div>
+            <div class="f-title">Ưu đãi Điều hòa</div>
+            <div class="f-sub">Lắp đặt tận nơi • Bảo hành chính hãng</div>
           </div>
         </div>
 
         <div class="benefit-col">
           <div class="pill">
             <div class="d-flex align-items-center gap-2">
-              <span class="pill-dot">4K</span>
-              <div class="pill-title">Màn hình 4K/8K</div>
+              <span class="pill-dot">❄️</span>
+              <div class="pill-title">Làm lạnh nhanh</div>
             </div>
-            <div class="pill-desc">Hình ảnh sắc nét, màu sắc rực rỡ cho mọi nội dung.</div>
+            <div class="pill-desc">Làm mát tức thì cho ngày nóng bức với chế độ Turbo.</div>
           </div>
 
           <div class="pill">
             <div class="d-flex align-items-center gap-2">
-              <span class="pill-dot">AI</span>
-              <div class="pill-title">Tối ưu AI</div>
+              <span class="pill-dot">⚡</span>
+              <div class="pill-title">Inverter tiết kiệm</div>
             </div>
-            <div class="pill-desc">Nâng cấp hình ảnh & âm thanh theo thời gian thực.</div>
+            <div class="pill-desc">Tiết kiệm điện 30–50% & vận hành êm ái.</div>
           </div>
 
           <div class="pill">
             <div class="d-flex align-items-center gap-2">
-              <span class="pill-dot">♪</span>
-              <div class="pill-title">Âm thanh Dolby</div>
+              <span class="pill-dot">🌿</span>
+              <div class="pill-title">Gas R32 thân thiện</div>
             </div>
-            <div class="pill-desc">Trải nghiệm rạp hát tại gia với Dolby Atmos/DTS:X.</div>
+            <div class="pill-desc">Hiệu suất cao, bảo vệ môi trường, an toàn sử dụng.</div>
           </div>
         </div>
       </div>
@@ -235,7 +234,7 @@
 </div>
 <div class="d-flex flex-wrap gap-2 mb-4">
   @forelse($hotCategories as $c)
-    <a class="chip" href="{{ route('categories.show', $c->id) }}">📁 {{ $c->name }}</a>
+    <a class="chip" href="{{ route('categories.show', $c->id) }}">🧊 {{ $c->name }}</a>
   @empty
     <span class="text-muted">Chưa có danh mục.</span>
   @endforelse
@@ -249,7 +248,7 @@
 
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 shop-grid">
   @forelse($featuredProducts as $p)
-    @php $img = $p->image ? asset('storage/'.$p->image) : 'https://via.placeholder.com/420x260?text=TV+Store'; @endphp
+    @php $img = $p->image ? asset('storage/'.$p->image) : 'https://via.placeholder.com/420x260?text=Airconditioner+Shop'; @endphp
     <div class="col">
       <div class="card-product">
         <div class="cp-img-wrap"><img class="cp-img" src="{{ $img }}" alt="{{ $p->name }}"></div>
@@ -283,28 +282,28 @@
 <div class="row g-3 mt-2">
   <div class="col-md-3 col-6">
     <div class="service-card">
+      <div class="service-ic">🛠️</div>
+      <div>
+        <div class="fw-bold">Lắp đặt chuyên nghiệp</div>
+        <small class="text-muted">Đủ vật tư cơ bản, bảo hành thi công</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="service-card">
       <div class="service-ic">🚚</div>
       <div>
-        <div class="fw-bold">Miễn phí vận chuyển</div>
-        <small class="text-muted">Áp dụng cho đơn ≥ 1.000.000đ</small>
+        <div class="fw-bold">Giao nhanh trong ngày</div>
+        <small class="text-muted">Khu vực nội thành</small>
       </div>
     </div>
   </div>
   <div class="col-md-3 col-6">
     <div class="service-card">
-      <div class="service-ic">↩</div>
+      <div class="service-ic">🛡️</div>
       <div>
-        <div class="fw-bold">Đổi trả 7 ngày</div>
-        <small class="text-muted">Hỗ trợ đổi trả nhanh chóng</small>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-3 col-6">
-    <div class="service-card">
-      <div class="service-ic">🛡</div>
-      <div>
-        <div class="fw-bold">Bảo hành 24 tháng</div>
-        <small class="text-muted">Chính hãng, an tâm sử dụng</small>
+        <div class="fw-bold">Bảo hành chính hãng</div>
+        <small class="text-muted">Máy nén tới 5 năm</small>
       </div>
     </div>
   </div>
@@ -312,7 +311,7 @@
     <div class="service-card">
       <div class="service-ic">💬</div>
       <div>
-        <div class="fw-bold">Hỗ trợ 24/7</div>
+        <div class="fw-bold">Tư vấn 24/7</div>
         <small class="text-muted">Chat & hotline luôn sẵn sàng</small>
       </div>
     </div>
@@ -323,8 +322,8 @@
 <div class="mt-4 p-4 rounded-3" style="background:#ffffff;border:1px solid var(--border);box-shadow:0 6px 16px rgba(17,24,39,.06);">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
     <div>
-      <h5 class="mb-1 fw-bold">Sẵn sàng khám phá?</h5>
-      <div class="text-muted">Hơn 100+ mẫu Tivi đang sẵn hàng với nhiều ưu đãi hấp dẫn.</div>
+      <h5 class="mb-1 fw-bold">Sẵn sàng làm mát ngôi nhà?</h5>
+      <div class="text-muted">Hơn 100+ mẫu Điều hòa chính hãng, ưu đãi hấp dẫn.</div>
     </div>
     <div class="d-flex gap-2">
       <a href="{{ route('categories.index') }}" class="btn btn-cta btn-cta-primary">📂 Khám phá danh mục</a>
