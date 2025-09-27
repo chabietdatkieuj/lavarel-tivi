@@ -27,6 +27,9 @@ use App\Http\Controllers\PromoController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Admin\ChatAdminController;
 
+// NEW: PROFILE (đổi thông tin / mật khẩu)
+use App\Http\Controllers\ProfileController;
+
 /* =========================
  *  TRANG CHỦ (public)
  * ========================= */
@@ -36,8 +39,6 @@ Route::get('/', function () {
         'featuredProducts' => Product::latest()->take(8)->get(),
     ]);
 })->name('welcome');
-Route::resource('categories', CategoryController::class)->only(['index','show']);
-    Route::resource('products',   ProductController::class)->only(['index','show']);
 
 /* =========================
  *  MoMo CALLBACK/IPN (public để MoMo gọi)
@@ -49,6 +50,13 @@ Route::post('/payment/momo/ipn',      [OrderController::class,'ipn'])->name('pay
  *  VÙNG ĐÃ ĐĂNG NHẬP + XÁC THỰC EMAIL
  * ========================= */
 Route::middleware(['auth','verified'])->group(function () {
+
+    /* ---------- NEW: PROFILE (cho mọi user đã đăng nhập) ---------- */
+    Route::get  ('/account',                 [ProfileController::class,'edit'])->name('account.edit');                 // Trang sửa thông tin
+    Route::patch('/account',                 [ProfileController::class,'update'])->name('account.update');             // Lưu thông tin
+    Route::get  ('/account/password',        [ProfileController::class,'editPassword'])->name('account.password.edit'); // Trang đổi mật khẩu
+    Route::patch('/account/password',        [ProfileController::class,'updatePassword'])->name('account.password.update'); // Lưu mật khẩu
+    /* ---------------------------------------------------------------- */
 
     /* ---------------------------------
      *  ADMIN (role=admin)
@@ -100,7 +108,8 @@ Route::middleware(['auth','verified'])->group(function () {
     /* ---------------------------------
      *  CUSTOMER: chỉ XEM danh mục & sản phẩm
      * --------------------------------- */
-    
+    Route::resource('categories', CategoryController::class)->only(['index','show']);
+    Route::resource('products',   ProductController::class)->only(['index','show']);
 
     /* ---------------------------------
      *  CUSTOMER: CART + CHECKOUT + LỊCH SỬ ĐƠN + TẠO REVIEW
