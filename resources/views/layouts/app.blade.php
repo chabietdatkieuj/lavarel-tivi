@@ -194,7 +194,7 @@
                     @if(Route::has('vouchers.news'))
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('vouchers.news') ? 'active' : '' }}"
-                           href="{{ route('vouchers.news') }}">📰Voucher</a>
+                           href="{{ route('vouchers.news') }}">🎟️Voucher</a>
                     </li>
                     @endif
                 @endunless
@@ -255,12 +255,13 @@
                    href="{{ route('admin.orders.index') }}">🧾 Quản lý Đơn hàng</a>
                 <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
                    href="{{ route('admin.users.index') }}">👥 Quản lý Người dùng</a>
+            
+                   <div class="mt-3 mb-1 text-uppercase small text-muted">Doanh thu</div>
                 <a class="nav-link {{ request()->routeIs('admin.reports.index') ? 'active' : '' }}"
                    href="{{ route('admin.reports.index') }}">📑 Báo cáo (bảng)</a>
                 <a class="nav-link {{ request()->routeIs('admin.reports.charts') ? 'active' : '' }}"
                    href="{{ route('admin.reports.charts') }}">📈 Biểu đồ</a>
-                <a class="nav-link {{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}"
-                   href="{{ route('admin.reviews.index') }}">📝 Quản lý đánh giá</a>
+               
 
                 {{-- NEW: Khuyến mãi / Voucher (admin) --}}
                 @if(Route::has('admin.vouchers.index'))
@@ -268,12 +269,16 @@
                 <a class="nav-link {{ request()->routeIs('admin.vouchers.*') ? 'active' : '' }}"
                    href="{{ route('admin.vouchers.index') }}">🎟️ Quản lý Voucher</a>
                 @endif
-
-                {{-- ✅ NEW: Hỗ trợ trực tuyến (admin) --}}
+                <div class="mt-3 mb-1 text-uppercase small text-muted">Chat, Review</div>
+                <a class="nav-link {{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}"
+                   href="{{ route('admin.reviews.index') }}">📝 Quản lý đánh giá</a>
+                    {{-- ✅ NEW: Hỗ trợ trực tuyến (admin) --}}
                 @if(Route::has('admin.chats.index'))
                 <a class="nav-link {{ request()->routeIs('admin.chats.*') ? 'active' : '' }}"
                    href="{{ route('admin.chats.index') }}">💬 Hỗ trợ trực tuyến</a>
                 @endif
+
+                
             </nav>
         </aside>
 
@@ -338,14 +343,14 @@
 @if((auth()->user()->role ?? 'customer') === 'customer')
 <style>
   .chat-fab{
-    position: fixed; left:18px; bottom:18px; z-index:9999;
+    position: fixed; right:18px; bottom:18px; z-index:9999;
     width:52px; height:52px; border-radius:50%;
     background:linear-gradient(135deg,#2563eb,#60a5fa); color:#fff;
     display:grid; place-items:center; font-weight:900; box-shadow:0 10px 24px rgba(0,0,0,.2);
     cursor:pointer;
   }
   .chat-panel{
-    position: fixed; left:18px; bottom:80px; z-index:9999; width:320px; max-height:420px;
+    position: fixed; right:18px; bottom:80px; z-index:9999; width:320px; max-height:420px;
     background:#fff; border:1px solid #e5e7eb; border-radius:12px; box-shadow:0 10px 24px rgba(0,0,0,.2);
     display:none; overflow:hidden;
   }

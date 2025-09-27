@@ -26,19 +26,8 @@
 @section('content')
 <h2 class="page-title mb-3">✏️ Sửa đánh giá</h2>
 
-@if(session('success'))
-  <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-@if($errors->any())
-  <div class="alert alert-danger mb-3">
-    <div class="fw-bold mb-1">Có lỗi xảy ra:</div>
-    <ul class="mb-0">
-      @foreach($errors->all() as $e)
-        <li>{{ $e }}</li>
-      @endforeach
-    </ul>
-  </div>
-@endif
+
+
 
 <div class="card-lite mb-3">
   <div class="d-flex justify-content-between flex-wrap gap-2">
@@ -98,5 +87,6 @@
       onsubmit="return confirm('Xoá đánh giá này?')" class="text-end">
   @csrf @method('DELETE')
   <button class="btn btn-danger">Xoá đánh giá</button>
+  
 </form>
 @endsection

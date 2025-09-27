@@ -72,9 +72,7 @@
 
 @section('content')
 
-@if (session('success'))
-  <div class="alert alert-success">{{ session('success') }}</div>
-@endif
+
 
 @php
   // lấy categories cho dropdown tìm kiếm
@@ -165,7 +163,7 @@
 @else
   @if(auth()->user()->role !== 'admin')
     {{-- ======= CUSTOMER: lưới sản phẩm ======= --}}
-    <h2 class="mb-3 fw-bold text-white">🛒 Sản phẩm</h2>
+    <h2 class="mb-3 fw-bold text-dark">🛒 Sản phẩm</h2>
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 shop-grid">
       @foreach($products as $p)
         <div class="col">

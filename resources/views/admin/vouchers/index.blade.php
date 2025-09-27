@@ -7,7 +7,7 @@
   <a href="{{ route('admin.vouchers.create') }}" class="btn btn-gold">+ Thêm</a>
 </div>
 
-@if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
+
 
 @if($vouchers->isEmpty())
   <div class="alert alert-info">Chưa có voucher.</div>

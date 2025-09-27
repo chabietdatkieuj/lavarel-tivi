@@ -45,9 +45,7 @@
 @section('content')
 <h2 class="orders-title mb-3">🧾 Chi tiết đơn #{{ $order->id }}</h2>
 
-@if(session('success'))  <div class="alert alert-success">{{ session('success') }}</div> @endif
-@if(session('error'))    <div class="alert alert-danger">{{ session('error') }}</div>   @endif
-@if(session('info'))     <div class="alert alert-info">{{ session('info') }}</div>      @endif
+
 
 @php
   $map = [

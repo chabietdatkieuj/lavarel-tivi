@@ -4,8 +4,7 @@
 @section('content')
 <h2 class="fw-bold text-white mb-3">👥 Quản lý người dùng</h2>
 
-@if(session('success')) <div class="alert alert-success">{{ session('success') }}</div> @endif
-@if(session('error'))   <div class="alert alert-danger">{{ session('error') }}</div> @endif
+
 
 <div class="mb-2">
     <a href="{{ route('admin.users.create') }}" class="btn btn-gold">+ Thêm người dùng</a>

@@ -81,12 +81,7 @@
   </div>
 
   {{-- Flash message --}}
-  @if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-  @endif
-  @if(session('error'))
-    <div class="alert alert-danger">{{ session('error') }}</div>
-  @endif
+ 
 
   @if(count($cart->items) === 0)
     <div class="p-4 text-center empty-card">

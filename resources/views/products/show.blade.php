@@ -29,9 +29,7 @@
 <div class="container">
     <h2 class="mb-4">Chi tiết sản phẩm</h2>
 
-    @if (session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+    
 
     <div class="card shadow-sm">
         <div class="row g-0">

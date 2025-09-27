@@ -59,9 +59,7 @@
       @endauth
     </div>
 
-    @if ($message = Session::get('success'))
-      <div class="alert alert-success">{{ $message }}</div>
-    @endif
+    
 
     @if($categories->count() === 0)
       <div class="empty-state mt-2">

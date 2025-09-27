@@ -36,6 +36,8 @@ Route::get('/', function () {
         'featuredProducts' => Product::latest()->take(8)->get(),
     ]);
 })->name('welcome');
+Route::resource('categories', CategoryController::class)->only(['index','show']);
+    Route::resource('products',   ProductController::class)->only(['index','show']);
 
 /* =========================
  *  MoMo CALLBACK/IPN (public để MoMo gọi)
@@ -98,8 +100,7 @@ Route::middleware(['auth','verified'])->group(function () {
     /* ---------------------------------
      *  CUSTOMER: chỉ XEM danh mục & sản phẩm
      * --------------------------------- */
-    Route::resource('categories', CategoryController::class)->only(['index','show']);
-    Route::resource('products',   ProductController::class)->only(['index','show']);
+    
 
     /* ---------------------------------
      *  CUSTOMER: CART + CHECKOUT + LỊCH SỬ ĐƠN + TẠO REVIEW
