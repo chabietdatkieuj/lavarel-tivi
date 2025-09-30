@@ -3,7 +3,6 @@
 
 @push('styles')
 <style>
-  /* Khối chọn sao */
   .rating-wrap{
     display:flex; align-items:center; gap:.5rem;
     padding:.6rem .75rem; border:1px solid var(--border); border-radius:10px;
@@ -15,10 +14,9 @@
     color:#d1d5db; transition:transform .06s ease, color .12s ease;
   }
   .star:hover{ transform:scale(1.06) }
-  .star.filled{ color:#f59e0b; } /* vàng */
+  .star.filled{ color:#f59e0b; }
   .rating-hint{ color:var(--text-600); font-size:.9rem }
 
-  /* Inputs khớp layout app */
   .form-control, .form-select{
     background: var(--surface); color: var(--text-900);
     border:1px solid var(--border); border-radius:10px;
@@ -26,6 +24,18 @@
   .form-control:focus, .form-select:focus{
     border-color: var(--primary-600);
     box-shadow: 0 0 0 .2rem rgba(37,99,235,.15);
+  }
+
+  /* preview ảnh */
+  .rv-uploads{ display:grid; grid-template-columns: repeat(auto-fill, minmax(92px,1fr)); gap:.65rem; }
+  .rv-thumb{
+    position:relative; border:1px solid var(--border); border-radius:10px; overflow:hidden; background:#fafafa;
+    aspect-ratio:1/1; display:grid; place-items:center;
+  }
+  .rv-thumb img{ width:100%; height:100%; object-fit:cover; }
+  .rv-thumb .rv-name{
+    position:absolute; left:0; right:0; bottom:0; font-size:.72rem; padding:.2rem .35rem;
+    background:rgba(0,0,0,.45); color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
 </style>
 @endpush
@@ -52,10 +62,12 @@
   $currentComment = old('comment', $existing->comment ?? '');
 @endphp
 
-<form method="POST" action="{{ route('reviews.store', ['order'=>$order->id,'product'=>$product->id]) }}">
+<form method="POST"
+      action="{{ route('reviews.store', ['order'=>$order->id,'product'=>$product->id]) }}"
+      enctype="multipart/form-data">
   @csrf
 
-  {{-- Chọn sao trực quan (vẫn submit field "rating" như cũ) --}}
+  {{-- Chọn sao --}}
   <div class="mb-3">
     <label class="form-label d-block">Số sao (1–5)</label>
 
@@ -69,15 +81,30 @@
       <span class="ms-2 rating-hint" id="ratingHint"></span>
     </div>
 
-    {{-- input số để server validate như cũ, nhưng ẩn đi (vẫn giữ name=rating) --}}
     <input type="number" name="rating" id="ratingInput" class="form-control d-none"
            min="1" max="5" value="{{ $currentRating }}" required>
   </div>
 
+  {{-- Nhận xét --}}
   <div class="mb-3">
     <label class="form-label">Nhận xét</label>
     <textarea name="comment" rows="4" class="form-control"
       placeholder="Cảm nhận của bạn...">{{ $currentComment }}</textarea>
+  </div>
+
+  {{-- Ảnh đánh giá --}}
+  <div class="mb-3">
+    <label class="form-label">Ảnh đánh giá (tối đa 5 ảnh)</label>
+    <input type="file"
+           name="photos[]"
+           class="form-control"
+           accept="image/*"
+           multiple>
+    @error('photos')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+    @error('photos.*')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+    <div class="form-text">Hỗ trợ JPG/PNG/WebP, kích thước hợp lý để tải nhanh.</div>
+
+    <div id="rvPreview" class="rv-uploads mt-2"></div>
   </div>
 
   <button class="btn btn-gold">Gửi đánh giá</button>
@@ -88,6 +115,7 @@
 @push('scripts')
 <script>
 (function(){
+  // rating
   const stars = Array.from(document.querySelectorAll('.star'));
   const input = document.getElementById('ratingInput');
   const hint  = document.getElementById('ratingHint');
@@ -97,19 +125,31 @@
     stars.forEach(s => s.classList.toggle('filled', Number(s.dataset.value) <= val));
     hint.textContent = val ? (val + '/5 • ' + words[val]) : '';
   }
-
-  // init
   let cur = Number(input.value || 5);
   paint(cur);
-
   stars.forEach(s => {
-    s.addEventListener('click', () => {
-      input.value = s.dataset.value;
-      paint(Number(input.value));
-    });
+    s.addEventListener('click', () => { input.value = s.dataset.value; paint(Number(input.value)); });
     s.addEventListener('mouseenter', () => paint(Number(s.dataset.value)));
     s.addEventListener('mouseleave', () => paint(Number(input.value)));
   });
+
+  // preview ảnh
+  const fileInput = document.querySelector('input[name="photos[]"]');
+  const preview   = document.getElementById('rvPreview');
+  if (fileInput && preview){
+    fileInput.addEventListener('change', () => {
+      preview.innerHTML = '';
+      const files = Array.from(fileInput.files || []);
+      files.forEach(f => {
+        if(!f.type.startsWith('image/')) return;
+        const url = URL.createObjectURL(f);
+        const wrap = document.createElement('div');
+        wrap.className = 'rv-thumb';
+        wrap.innerHTML = `<img src="${url}" alt=""><div class="rv-name">${f.name}</div>`;
+        preview.appendChild(wrap);
+      });
+    });
+  }
 })();
 </script>
 @endpush

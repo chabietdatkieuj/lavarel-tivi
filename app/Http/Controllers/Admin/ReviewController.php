@@ -31,7 +31,10 @@ class ReviewController extends Controller
             }
         }
 
-        $reviews  = $q->paginate(12)->withQueryString();
+        $reviews = Review::with(['user','product','replies.admin','images']) // <— thêm images
+    ->filter($productId, $rating)
+    ->latest()
+    ->paginate(15);
         $products = Product::select('id','name')->orderBy('name')->get();
 
         // Lấy replies cho các review hiện có (gom nhóm theo review_id)

@@ -114,12 +114,34 @@ $products = $query->paginate(auth()->check() && auth()->user()->role==='admin' ?
         return redirect()->route('products.index')->with('success', 'Xóa sản phẩm thành công!');
     }
 
-   public function show(Product $product)
+   public function show(Product $product, Request $request)
 {
-    // Eager load để partial ở view không tạo N+1
-    $product->load(['category', 'reviews.user', 'reviews.replies.admin']);
+    $ratingFilter = (int) $request->query('rating', 0);
 
-    return view('products.show', compact('product'));
+    // đếm phân phối sao
+    $ratingCounts = \App\Models\Review::select('rating', \DB::raw('COUNT(*) as c'))
+        ->where('product_id', $product->id)
+        ->groupBy('rating')
+        ->pluck('c', 'rating'); // [5=>n,4=>n,...]
+
+    $reviewsQuery = \App\Models\Review::with(['user','replies.admin','images'])
+        ->where('product_id', $product->id)
+        ->latest();
+
+    if ($ratingFilter >= 1 && $ratingFilter <= 5) {
+        $reviewsQuery->where('rating', $ratingFilter);
+    }
+
+    // nếu bạn đang dùng $product->reviews trong view,
+    // có thể gán thủ công để không sửa view nhiều:
+    $product->setRelation('reviews', $reviewsQuery->get());
+
+    return view('products.show', [
+        'product'       => $product,
+        'ratingCounts'  => $ratingCounts,
+        'ratingFilter'  => $ratingFilter,
+    ]);
 }
+
 
 }

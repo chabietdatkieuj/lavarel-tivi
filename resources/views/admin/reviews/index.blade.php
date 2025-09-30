@@ -19,6 +19,18 @@
     border-color:var(--border);
   }
   .cell-comment{ max-width: 520px; }
+
+  /* thumbnails ảnh review (THÊM MỚI) */
+  .rv-photos{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(80px,1fr));
+    gap:.5rem; margin-top:.5rem;
+  }
+  .rv-thumb{
+    aspect-ratio:1/1; border:1px solid var(--border); border-radius:10px;
+    overflow:hidden; background:#fafafa; display:grid; place-items:center;
+  }
+  .rv-thumb img{ width:100%; height:100%; object-fit:cover; }
+
   .badge-id{ background:#eef2ff; color:#3730a3; font-weight:700; }
   .btn-danger.btn-sm{ font-weight:600 }
 
@@ -64,8 +76,6 @@
   </div>
 </form>
 
-
-
 {{-- ====== BẢNG ĐÁNH GIÁ ====== --}}
 <div class="table-responsive">
   <table class="table table-hover align-middle">
@@ -102,7 +112,22 @@
         </td>
 
         <td class="text-start cell-comment">
+          {{-- nội dung bình luận --}}
           {{ $rv->comment ?: '—' }}
+
+          {{-- ẢNH REVIEW (THÊM MỚI) --}}
+          @if(isset($rv->images) && $rv->images->count())
+            <div class="rv-photos">
+              @foreach($rv->images as $img)
+                @php $src = $img->path ? asset('storage/'.$img->path) : null; @endphp
+                @if($src)
+                  <a class="rv-thumb" href="{{ $src }}" target="_blank" rel="noopener">
+                    <img src="{{ $src }}" alt="review image">
+                  </a>
+                @endif
+              @endforeach
+            </div>
+          @endif
         </td>
 
         <td>{{ $rv->created_at->format('d/m/Y H:i') }}</td>
@@ -126,7 +151,6 @@
         <td colspan="7" class="p-0 border-0">
           <div class="collapse" id="rep-{{ $rv->id }}">
             <div class="reply-wrap p-3">
-              {{-- danh sách replies --}}
               @if($rv->replies->count())
                 <div class="d-flex flex-column gap-2 mb-3">
                   @foreach($rv->replies as $rp)
@@ -137,7 +161,6 @@
                           <div class="reply-meta">Trả lời lúc {{ $rp->created_at->format('d/m/Y H:i') }}</div>
                         </div>
                         <div class="reply-actions">
-                          {{-- nút sửa bật form bên dưới --}}
                           <button class="btn btn-outline-secondary btn-sm"
                                   type="button" data-bs-toggle="collapse"
                                   data-bs-target="#edit-rep-{{ $rp->id }}">Sửa</button>
@@ -152,7 +175,6 @@
                       </div>
                       <div class="mt-1">{{ $rp->content }}</div>
 
-                      {{-- form edit --}}
                       <div class="collapse mt-2" id="edit-rep-{{ $rp->id }}">
                         <form method="POST" action="{{ route('admin.reviews.replies.update', $rp->id) }}">
                           @csrf @method('PATCH')
@@ -169,7 +191,6 @@
                 <div class="text-muted mb-3">Chưa có trả lời.</div>
               @endif
 
-              {{-- form thêm trả lời --}}
               <form method="POST" action="{{ route('admin.reviews.replies.store', $rv->id) }}">
                 @csrf
                 <label class="form-label fw-semibold">Thêm trả lời</label>

@@ -16,7 +16,7 @@ class Review extends Model
         'comment',
     ];
 
-    // (Tuỳ chọn) luôn load user để tránh N+1
+    // preload user để tránh N+1 (tuỳ chọn preload luôn images)
     protected $with = ['user'];
 
     protected $casts = [
@@ -38,11 +38,16 @@ class Review extends Model
     /** Trả lời của admin cho review này */
     public function replies(): HasMany
     {
-        // Cần App\Models\ReviewReply (model đơn giản với fillable: review_id, admin_id, content)
         return $this->hasMany(ReviewReply::class)->latest();
     }
 
-    /** Đảm bảo rating luôn nằm trong khoảng 1–5 */
+    /** Ảnh đính kèm đánh giá */
+    public function images(): HasMany
+    {
+        return $this->hasMany(ReviewImage::class);
+    }
+
+    /** Đảm bảo rating luôn nằm 1–5 */
     public function setRatingAttribute($value): void
     {
         $v = (int) $value;
@@ -51,10 +56,7 @@ class Review extends Model
         $this->attributes['rating'] = $v;
     }
 
-    /**
-     * Scope tiện lọc (dùng trong admin):
-     * Review::with(['user','product'])->filter($productId, $rating)->latest()->paginate();
-     */
+    /** Scope lọc tiện dụng (admin/khách) */
     public function scopeFilter($q, ?int $productId = null, ?int $rating = null)
     {
         return $q

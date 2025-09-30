@@ -22,14 +22,24 @@
     border-radius:10px; padding:.5rem .65rem; flex:1;
   }
   .reply-meta{ font-size:.8rem; color:var(--text-600); margin-bottom:.15rem; }
+
+  /* Review images */
+  .rv-photos{
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(92px,1fr));
+    gap:.65rem; margin-top:.5rem;
+  }
+  .rv-thumb{
+    border:1px solid var(--border); border-radius:10px; overflow:hidden;
+    background:#fafafa; aspect-ratio:1/1; display:grid; place-items:center;
+  }
+  .rv-thumb img{ width:100%; height:100%; object-fit:cover; }
+  .rv-filter .btn{ padding:.25rem .55rem; font-weight:700 }
 </style>
 @endpush
 
 @section('content')
 <div class="container">
     <h2 class="mb-4">Chi tiết sản phẩm</h2>
-
-    
 
     <div class="card shadow-sm">
         <div class="row g-0">
@@ -72,26 +82,39 @@
 
     {{-- ========== KHỐI ĐÁNH GIÁ ========== --}}
     @php
-        // Đã eager-load, nhưng vẫn an toàn nếu gọi with ở đây.
-        $reviews = $product->reviews; // đã có user + replies + admin từ controller
+        // $product->reviews nên đã được eager-load kèm user, replies.admin, images trong controller
+        $reviews = $product->reviews;
         $avg     = (float) number_format($reviews->avg('rating'), 1);
         $count   = $reviews->count();
         $avgInt  = (int) round($avg);
+        $curRating = (int) request('rating', 0);
     @endphp
 
     <div class="card mt-4" id="reviews">
         <div class="card-body">
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <h5 class="mb-0">⭐ Đánh giá từ khách hàng</h5>
-                <div class="d-flex align-items-center gap-2">
-                    <div class="star-lg">
-                        @for($i=1;$i<=5;$i++)
-                          {!! $i <= $avgInt ? '★' : '☆' !!}
-                        @endfor
-                    </div>
-                    <div class="muted">
-                        {{ number_format($avg,1) }}/5 • {{ $count }} đánh giá
-                    </div>
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                  <div class="d-flex align-items-center gap-2">
+                      <div class="star-lg">
+                          @for($i=1;$i<=5;$i++)
+                            {!! $i <= $avgInt ? '★' : '☆' !!}
+                          @endfor
+                      </div>
+                      <div class="muted">
+                          {{ number_format($avg,1) }}/5 • {{ $count }} đánh giá
+                      </div>
+                  </div>
+
+                  {{-- Bộ lọc theo số sao --}}
+                  <div class="rv-filter">
+                    <a class="btn btn-outline-secondary @if(!$curRating) active @endif"
+                       href="{{ route('products.show', $product->id) }}#reviews">Tất cả</a>
+                    @for($i=5;$i>=1;$i--)
+                      <a class="btn btn-outline-primary @if($curRating===$i) active @endif"
+                         href="{{ route('products.show', $product->id) }}?rating={{ $i }}#reviews">{{ $i }}★</a>
+                    @endfor
+                  </div>
                 </div>
             </div>
 
@@ -102,24 +125,42 @@
                             <div class="fw-semibold">{{ $rv->user->name ?? 'Khách' }}</div>
                             <div class="stars">
                                 @for($i=1;$i<=5;$i++)
-                                  {!! $i <= $rv->rating ? '★' : '☆' !!}
+                                  {!! $i <= ($rv->rating ?? 0) ? '★' : '☆' !!}
                                 @endfor
                             </div>
                         </div>
-                        @if($rv->comment)
+
+                        {{-- Nội dung --}}
+                        @if(!empty($rv->comment))
                           <div class="mt-1">{{ $rv->comment }}</div>
                         @endif
-                        <div class="muted small mt-1">{{ $rv->created_at->format('d/m/Y H:i') }}</div>
+                        <div class="muted small mt-1">{{ optional($rv->created_at)->format('d/m/Y H:i') }}</div>
+
+                        {{-- ẢNH CỦA ĐÁNH GIÁ --}}
+                        @if(isset($rv->images) && $rv->images->count())
+                          <div class="rv-photos">
+                            @foreach($rv->images as $img)
+                              @php
+                                $src = isset($img->path) ? asset('storage/'.$img->path) : null;
+                              @endphp
+                              @if($src)
+                                <a class="rv-thumb" href="{{ $src }}" target="_blank" rel="noopener">
+                                  <img src="{{ $src }}" alt="review image">
+                                </a>
+                              @endif
+                            @endforeach
+                          </div>
+                        @endif
 
                         {{-- PHẢN HỒI TỪ ADMIN --}}
-                        @if($rv->replies && $rv->replies->count())
+                        @if(isset($rv->replies) && $rv->replies->count())
                           <div class="admin-replies ps-3 ms-1 border-start">
                             @foreach($rv->replies as $rep)
                               <div class="reply-item">
                                 <span class="reply-badge">ADMIN</span>
                                 <div class="reply-bubble">
                                   <div class="reply-meta">
-                                    {{ $rep->admin->name ?? 'Quản trị viên' }} • {{ $rep->created_at->format('d/m/Y H:i') }}
+                                    {{ $rep->admin->name ?? 'Quản trị viên' }} • {{ optional($rep->created_at)->format('d/m/Y H:i') }}
                                   </div>
                                   <div>{{ $rep->content }}</div>
                                 </div>
