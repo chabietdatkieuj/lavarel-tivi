@@ -3,11 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Message extends Model
 {
-    protected $fillable = ['conversation_id','sender_id','sender_role','body','read_at'];
+    protected $fillable = [
+        'conversation_id','sender_id','sender_role','body','image_path','read_at'
+    ];
 
-    public function conversation() { return $this->belongsTo(Conversation::class); }
-    public function sender()       { return $this->belongsTo(User::class, 'sender_id'); }
+    // để API trả sẵn URL ảnh cho frontend
+    protected $appends = ['image_url'];
+
+    public function conversation(){ return $this->belongsTo(Conversation::class); }
+    public function sender(){ return $this->belongsTo(User::class,'sender_id'); }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        return $this->image_path ? Storage::url($this->image_path) : null;
+    }
 }

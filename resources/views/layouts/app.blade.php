@@ -344,7 +344,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-{{-- ✅ NEW: Live Chat widget cho khách (đã đăng nhập, role=customer) --}}
+{{-- ✅ Live Chat cho KH --}}
 @auth
 @if((auth()->user()->role ?? 'customer') === 'customer')
 <style>
@@ -370,14 +370,23 @@
   }
   .chat-row.user .chat-msg{ background:#dbeafe }
   .chat-footer{ display:flex; gap:6px; padding:8px; border-top:1px solid #e5e7eb; background:#f9fafb }
+  .chat-row img.msg-image{ max-width:180px; max-height:180px; display:block; border-radius:10px; cursor:zoom-in; }
+  .chat-footer input[type="file"]{ display:none; }
+  .attach-btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:32px; height:32px; border:1px solid #e5e7eb; border-radius:8px; background:#fff;
+  }
 </style>
 
-<div class="chat-fab" id="chatFab">💬</div>
+<div class="chat-fab" id="chatFab" aria-label="Mở chat">💬</div>
 
 <div class="chat-panel" id="chatPanel">
   <div class="chat-header">Hỗ trợ trực tuyến</div>
   <div class="chat-body" id="chatBody"></div>
   <div class="chat-footer">
+    <label class="attach-btn" title="Đính kèm ảnh">📎
+      <input id="chatFile" type="file" accept="image/*">
+    </label>
     <input id="chatInput" class="form-control form-control-sm" placeholder="Nhập tin nhắn...">
     <button id="chatSend" class="btn btn-primary btn-sm">Gửi</button>
   </div>
@@ -390,68 +399,105 @@
   const body   = document.getElementById('chatBody');
   const input  = document.getElementById('chatInput');
   const sendBt = document.getElementById('chatSend');
+  const fileIn = document.getElementById('chatFile');
 
-  let lastId = 0; let opened = false; let timer = null;
+  // Nếu lỡ xoá .chat-fab, tạo lại để không lỗi
+  if(!fab){
+    const f = document.createElement('div');
+    f.id = 'chatFab'; f.className = 'chat-fab'; f.textContent = '💬';
+    document.body.appendChild(f);
+  }
+
+  let lastId = 0, opened = false, timer = null;
+  let isSending = false;                   // ✅ khoá khi đang gửi
+  const shown = new Set();                 // ✅ chống render trùng theo id
+
+
+  function scrollBottom(){ body.scrollTop = body.scrollHeight; }
+  function renderOne(m){
+    const row = document.createElement('div');
+    row.className = 'chat-row ' + (m.sender_role === 'user' ? 'user' : '');
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-msg';
+    if (m.body) { bubble.appendChild(document.createTextNode(m.body)); if (m.image_url) bubble.appendChild(document.createElement('br')); }
+    if (m.image_url) {
+      const img = document.createElement('img');
+      img.className = 'msg-image'; img.src = m.image_url; img.alt = 'attachment';
+      img.addEventListener('click', () => window.open(m.image_url, '_blank'));
+      bubble.appendChild(img);
+    }
+    if (!m.body && !m.image_url) bubble.textContent = '(Tin nhắn trống)';
+    row.appendChild(bubble); body.appendChild(row);
+  }
+
+  async function fetchMsgs(){
+    try{
+      const url = `{{ route('chat.fetch') }}` + (lastId ? `?after_id=${lastId}` : '');
+      const res = await fetch(url, {
+  headers: {'X-Requested-With':'XMLHttpRequest', 'Accept':'application/json'},
+  cache:'no-store',
+  credentials:'same-origin'
+});
+
+      if(!res.ok) return;
+      const data = await res.json();
+      (data.messages || []).forEach(m => { lastId = Math.max(lastId, m.id); renderOne(m); });
+      scrollBottom();
+    }catch(e){}
+  }
 
   function togglePanel(){
     opened = !opened;
     panel.style.display = opened ? 'block' : 'none';
-    if(opened){
-      fetchMsgs(true);
-      timer = setInterval(fetchMsgs, 3000);
-    } else {
-      clearInterval(timer);
-    }
+    if (opened){ fetchMsgs(); timer = setInterval(fetchMsgs, 20000); }
+    else { clearInterval(timer); timer = null; }
   }
 
-  function render(msgs){
-    msgs.forEach(m => {
-      lastId = Math.max(lastId, m.id);
-      const row = document.createElement('div');
-      row.className = 'chat-row ' + (m.sender_role === 'user' ? 'user':'');
-      const b = document.createElement('div');
-      b.className = 'chat-msg';
-      b.textContent = m.body;
-      row.appendChild(b);
-      body.appendChild(row);
+  async function sendMsg({text, file}) {
+  if(!(text && text.trim()) && !file) return;
+
+  const fd = new FormData();
+  if (text && text.trim()) fd.append('body', text.trim());
+  if (file) fd.append('image', file);
+
+  input.value = ''; fileIn.value = '';
+
+  try{
+    const res = await fetch(`{{ route('chat.send') }}`, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      },
+      body: fd,
+      credentials: 'same-origin'
     });
-    body.scrollTop = body.scrollHeight;
-  }
 
-  async function fetchMsgs(initial=false){
-    try{
-      const url = `{{ route('chat.fetch') }}` + (lastId ? `?after_id=${lastId}` : '');
-      const res = await fetch(url, {headers:{'X-Requested-With':'XMLHttpRequest'}});
-      if(!res.ok) return;
-      const json = await res.json();
-      if(json.messages && json.messages.length){
-        render(json.messages);
-      }
-    }catch(e){}
-  }
+    const raw = await res.text();
+    let data = null;
+    try { data = JSON.parse(raw); } catch(e){}
 
-  async function sendMsg(){
-    const text = (input.value || '').trim();
-    if(!text) return;
-    input.value='';
-    try{
-      await fetch(`{{ route('chat.send') }}`,{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-          'X-Requested-With':'XMLHttpRequest'
-        },
-        body: JSON.stringify({body:text})
-      });
-      // push ngay vào UI cho mượt
-      render([{id:lastId+1, sender_role:'user', body:text}]);
-    }catch(e){}
-  }
+    if(!res.ok){
+      const msg = data?.message || raw || 'Gửi thất bại';
+      renderOne({sender_role:'system', body:`Lỗi ${res.status}: ${msg.substring(0,180)}`});
+      return;
+    }
 
-  fab.addEventListener('click', togglePanel);
-  sendBt.addEventListener('click', sendMsg);
-  input.addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });
+    if(data?.message){
+      lastId = Math.max(lastId, data.message.id);
+      renderOne(data.message);
+      scrollBottom();
+    }
+  }catch(e){
+    renderOne({sender_role:'system', body:'Lỗi mạng. Thử lại sau.'});
+  }
+}
+
+  document.getElementById('chatFab').addEventListener('click', togglePanel);
+  sendBt.addEventListener('click', () => sendMsg({text: input.value, file: null}));
+  input.addEventListener('keydown', e => { if(e.key === 'Enter') sendMsg({text: input.value, file: null}); });
+  fileIn.addEventListener('change', () => { const f = fileIn.files?.[0]; if (f) sendMsg({text: input.value, file: f}); });
 })();
 </script>
 @endif

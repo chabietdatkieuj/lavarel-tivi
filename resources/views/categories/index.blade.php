@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Danh mục Tivi')
+@section('title', 'Danh mục điều hòa')
 
 @push('styles')
 <style>

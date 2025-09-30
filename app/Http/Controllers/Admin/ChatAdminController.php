@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\Message;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ChatAdminController extends Controller
 {
     public function index()
     {
-        // danh sách các cuộc chat đang mở, mới nhất
         $convs = Conversation::with('user')
             ->where('status','open')
             ->orderBy('updated_at','desc')
@@ -28,16 +28,33 @@ class ChatAdminController extends Controller
 
     public function send(Request $request, Conversation $conversation)
     {
-        $request->validate(['body'=>'required|string|max:2000']);
+        // CHO PHÉP gửi text hoặc ảnh (hoặc cả hai)
+        $data = $request->validate([
+            'body'  => 'nullable|string|max:2000',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:4096',
+        ]);
+
+        $path = null;
+        if ($request->hasFile('image')) {
+            // Lưu vào storage/app/public/chat (nhớ storage:link)
+            $path = $request->file('image')->store('chat', 'public');
+        }
+
+        // Nếu không có text lẫn ảnh -> bỏ qua để tránh lỗi 1048 (body not null)
+        if (empty($data['body']) && !$path) {
+            return back();
+        }
 
         Message::create([
             'conversation_id' => $conversation->id,
-            'sender_id'       => auth()->id(),
+            'sender_id'       => Auth::id(),
             'sender_role'     => 'admin',
-            'body'            => $request->body,
+            'body'            => $data['body'] ?? '',
+            'image_path'      => $path,
         ]);
 
-        $conversation->update(['admin_id'=>auth()->id()]); // gán admin đang phụ trách
+        // gán admin đang phụ trách
+        $conversation->update(['admin_id'=>Auth::id()]);
 
         return back();
     }
@@ -45,9 +62,24 @@ class ChatAdminController extends Controller
     public function fetch(Request $request, Conversation $conversation)
     {
         $request->validate(['after_id'=>'nullable|integer|min:0']);
+
         $q = Message::where('conversation_id', $conversation->id);
-        if ($request->filled('after_id')) $q->where('id','>',(int)$request->after_id);
-        return response()->json(['messages'=>$q->orderBy('id')->limit(200)->get()]);
+        if ($request->filled('after_id')) {
+            $q->where('id','>',(int)$request->after_id);
+        }
+
+        // Trả về image_url để frontend hiển thị ảnh
+        $messages = $q->orderBy('id')->limit(200)
+            ->get(['id','sender_role','body','image_path','created_at'])
+            ->map(fn($m)=>[
+                'id'          => $m->id,
+                'sender_role' => $m->sender_role,
+                'body'        => $m->body,
+                'image_url'   => $m->image_url, // accessor từ model
+                'created_at'  => $m->created_at,
+            ]);
+
+        return response()->json(['messages'=>$messages]);
     }
 
     public function close(Conversation $conversation)

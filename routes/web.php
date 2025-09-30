@@ -40,6 +40,13 @@ Route::get('/', function () {
         'featuredProducts' => Product::latest()->take(8)->get(),
     ]);
 })->name('welcome');
+  Route::get('/categories', [CategoryController::class,'index'])->name('categories.index');
+Route::get('/categories/{category}', [CategoryController::class,'show'])
+    ->whereNumber('category')->name('categories.show');
+
+Route::get('/products', [ProductController::class,'index'])->name('products.index');
+Route::get('/products/{product}', [ProductController::class,'show'])
+    ->whereNumber('product')->name('products.show');
 
 
 
@@ -134,9 +141,7 @@ Route::middleware(['auth','verified'])->group(function () {
     /* ---------------------------------
      *  CUSTOMER: chỉ XEM danh mục & sản phẩm
      * --------------------------------- */
-    Route::resource('categories', CategoryController::class)->only(['index','show']);
-    Route::resource('products',   ProductController::class)->only(['index','show']);
-
+ 
     /* ---------------------------------
      *  CUSTOMER: CART + CHECKOUT + LỊCH SỬ ĐƠN + TẠO REVIEW
      * --------------------------------- */
